@@ -201,8 +201,8 @@ def binarize(trial, threshold = 0):
     trial = 0
   return trial
 
-def _normalize_trial_eeg(eeg_trial):
-  eeg_trial_normalized = (eeg_trial - np.mean(eeg_trial, axis=1, keepdims=True)) / np.std(eeg_trial, axis=1, keepdims=True)
+def _normalize_trial_eeg(eeg_trial, eeg_mean, eeg_std):
+  eeg_trial_normalized = (eeg_trial - eeg_mean) / eeg_std
 
   return eeg_trial_normalized
 
@@ -211,7 +211,7 @@ def _normalize_trial_eeg(eeg_trial):
 # using correlation
 def corr_features(trial, binarize, threshold, num_electrodes):
   feat = []
-  trial_df = pd.DataFrame(_normalize_trial_eeg(trial), columns=list(range(1, num_electrodes+1)))
+  trial_df = pd.DataFrame(trial, columns=list(range(1, num_electrodes+1)))
   corr_matrix = np.array(trial_df.corr())
 
   corr_matrix = _normalize_trial(corr_matrix)
@@ -324,7 +324,7 @@ def imag_part_coh_features(trial, binarize=False, threshold = 0):
 #--------------------Data preparation--------------------
 
 # returns list of subjects for closed and opened
-def data_preparation(path, int_start, int_end, normalize=False):
+def data_preparation(path, int_start, int_end, normalize):
   # load data
   eeg_data = np.load(path, allow_pickle=True)
 
@@ -353,11 +353,15 @@ def data_preparation(path, int_start, int_end, normalize=False):
   closed = list()
 
   if normalize==True:
+
+    eeg_mean = np.mean(eeg_data_permuted)
+    eeg_std = np.std(eeg_data_permuted)
+
     for i, k in enumerate(eeg_label_data):
       if k == 1:
-        opened.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:])) #do not normalize trial for data_eyes
+        opened.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:], eeg_mean, eeg_std))
       else:
-        closed.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:]))
+        closed.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:], eeg_mean, eeg_std))
 
   if normalize==False:
     for i, k in enumerate(eeg_label_data):
@@ -470,6 +474,7 @@ def svm_lasso_bootsrap(features_mat_1, features_mat_2, n_bootstrap=100, metric=F
   X_train_scaled = scaler.fit_transform(X_train)
   X_test_scaled = scaler.transform(X_test)
 
+  selected_features = []
   # selected_features = [27, 474, 635, 637, 977, 978, 1206, 1211, 1327, 1464, 1706, 1761, 1795]
   while not selected_features:
     # Apply Lasso for feature selection
@@ -645,8 +650,7 @@ def xgb_lasso_bootsrap(features_mat_1, features_mat_2, n_estimators=200, max_dep
     X_train_bootstrap, y_train_bootstrap = resample(X_train_selected, y_train)
 
     # Create an XGBoost model
-    xgb_model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate,
-                              use_label_encoder=False, eval_metric='logloss')
+    xgb_model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, eval_metric='logloss')
 
     # Train the XGBoost model on the resampled training data
     xgb_model.fit(X_train_bootstrap, y_train_bootstrap)
