@@ -13,7 +13,7 @@ num_electrodes = 64
 
 fs = 120
 int_start = 4500
-int_end = 4600
+int_end = 5000
 
 if __name__ == '__main__':
     filenames = os.listdir(input_dir)
@@ -50,9 +50,13 @@ if __name__ == '__main__':
 
                             opened_corr_flat, closed_corr_flat = f.flatten_adj_mat(opened_corr, closed_corr, upp_triangle=upp_triangle,  num_electrodes=num_electrodes)
 
+                            X_train_scaled, X_test_scaled, y_train, y_test = f.prep_ml_dataset(opened_corr_flat, closed_corr_flat, metric=False)
+
+                            selected_features = f.lasso_optimization(X_train_scaled, y_train, alpha=0.1)
+
                             for model in [f.svm_lasso_bootsrap, f.rf_lasso_bootsrap, f.xgb_lasso_bootsrap]:
 
-                                method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score = model(opened_corr_flat, closed_corr_flat)
+                                method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score = model(X_train_scaled, X_test_scaled, y_train, y_test, selected_features)
 
                                 # Create a new row as a DataFrame
                                 new_row = pd.DataFrame({
@@ -74,7 +78,7 @@ if __name__ == '__main__':
 
 
                                 # Append the new row to the DataFrame
-                                results_df = pd.concat([results_df, new_row], ignore_index=True)
+                                results_df = pd.concat([results_df, new_row], ignore_index=False)
 
     # Save DataFrame as Excel
     results_df.to_excel(f"{output_dir}/df_result.xlsx", index=False)

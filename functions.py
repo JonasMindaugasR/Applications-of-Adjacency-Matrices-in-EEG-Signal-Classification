@@ -450,7 +450,7 @@ def flatten_adj_mat(opened_corr, closed_corr, upp_triangle=False, num_electrodes
 
 #--------------------ML functions--------------------
 
-def svm_lasso_bootsrap(features_mat_1, features_mat_2, n_bootstrap=100, metric=False, alpha=0.1, run_svm=True):
+def prep_ml_dataset(features_mat_1, features_mat_2, metric=False):
   if metric == False:
     opened_corr_flat = list()
     closed_corr_flat = list()
@@ -474,8 +474,10 @@ def svm_lasso_bootsrap(features_mat_1, features_mat_2, n_bootstrap=100, metric=F
   X_train_scaled = scaler.fit_transform(X_train)
   X_test_scaled = scaler.transform(X_test)
 
-  selected_features = []
-  # selected_features = [27, 474, 635, 637, 977, 978, 1206, 1211, 1327, 1464, 1706, 1761, 1795]
+  return X_train_scaled, X_test_scaled, y_train, y_test
+
+def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
+
   while not selected_features:
     # Apply Lasso for feature selection
     lasso = Lasso(alpha=alpha)
@@ -485,34 +487,33 @@ def svm_lasso_bootsrap(features_mat_1, features_mat_2, n_bootstrap=100, metric=F
     selected_features = [i for i, coef in enumerate(lasso.coef_) if coef != 0]
 
     if not selected_features:
-      print(f"No features selected with alpha={alpha}. Decreasing alpha.")
       alpha *= 0.5  # Decrease alpha (you can adjust the reduction factor)
-    else:
-      print(f"Selected features: {selected_features}")
 
-  if run_svm == True:
-    # Create a reduced feature matrix with only the selected features
-    X_train_selected = X_train_scaled[:, selected_features]
-    X_test_selected = X_test_scaled[:, selected_features]
+  return selected_features
 
-    accuracies = []
-    f1_scores = []
+def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100):
+  # Create a reduced feature matrix with only the selected features
+  X_train_selected = X_train_scaled[:, selected_features]
+  X_test_selected = X_test_scaled[:, selected_features]
 
-    # Step 2: Bootstrapping process on the selected features
-    for _ in range(n_bootstrap):
-      # Bootstrap resampling
-      X_train_bootstrap, y_train_bootstrap = resample(X_train_selected, y_train)
+  accuracies = []
+  f1_scores = []
 
-      # Train a classifier (SVM) using only the selected features
-      svm = SVC(kernel="rbf", C=1.0)
-      svm.fit(X_train_bootstrap, y_train_bootstrap)
+  # Step 2: Bootstrapping process on the selected features
+  for _ in range(n_bootstrap):
+    # Bootstrap resampling
+    X_train_bootstrap, y_train_bootstrap = resample(X_train_selected, y_train)
 
-      # Make predictions and evaluate the classifier
-      y_pred = svm.predict(X_test_selected)
+    # Train a classifier (SVM) using only the selected features
+    svm = SVC(kernel="rbf", C=1.0)
+    svm.fit(X_train_bootstrap, y_train_bootstrap)
 
-      # Evaluate the model
-      accuracies.append(accuracy_score(y_test, y_pred))
-      f1_scores.append(f1_score(y_test, y_pred))
+    # Make predictions and evaluate the classifier
+    y_pred = svm.predict(X_test_selected)
+
+    # Evaluate the model
+    accuracies.append(accuracy_score(y_test, y_pred))
+    f1_scores.append(f1_score(y_test, y_pred))
 
   method = "svm"
   mean_accuracy = np.mean(accuracies) * 100
@@ -523,46 +524,7 @@ def svm_lasso_bootsrap(features_mat_1, features_mat_2, n_bootstrap=100, metric=F
   return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
 
 
-def rf_lasso_bootsrap(features_mat_1, features_mat_2, n_estimators=100, max_depth=None, verbose=1, n_bootstrap=100,
-                      metric=False, alpha=0.1):
-  if metric == False:
-    opened_corr_flat = list()
-    closed_corr_flat = list()
-
-    for i in range(len(features_mat_1)):
-      opened_corr_flat.append(features_mat_1[i].flatten())
-      closed_corr_flat.append(features_mat_2[i].flatten())
-
-    X = opened_corr_flat + closed_corr_flat
-    y = [1] * 100 + [0] * 100  # Labels
-
-  if metric == True:
-    X = features_mat_1 + features_mat_2
-    y = [1] * 100 + [0] * 100  # Labels
-
-  # Split the data
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-  # Standardize the data
-  scaler = StandardScaler()
-  X_train_scaled = scaler.fit_transform(X_train)
-  X_test_scaled = scaler.transform(X_test)
-
-  selected_features = []
-  while not selected_features:
-    # Apply Lasso for feature selection
-    lasso = Lasso(alpha=alpha)
-    lasso.fit(X_train_scaled, y_train)
-
-    # Display the selected features
-    selected_features = [i for i, coef in enumerate(lasso.coef_) if coef != 0]
-
-    if not selected_features:
-      print(f"No features selected with alpha={alpha}. Decreasing alpha.")
-      alpha *= 0.5  # Decrease alpha (you can adjust the reduction factor)
-    else:
-      print(f"Selected features: {selected_features}")
-
+def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100, n_estimators=100, max_depth=None):
   # Create a reduced feature matrix with only the selected features
   X_train_selected = X_train_scaled[:, selected_features]
   X_test_selected = X_test_scaled[:, selected_features]
@@ -597,46 +559,7 @@ def rf_lasso_bootsrap(features_mat_1, features_mat_2, n_estimators=100, max_dept
   return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
 
 
-def xgb_lasso_bootsrap(features_mat_1, features_mat_2, n_estimators=200, max_depth=3, learning_rate=0.3,
-                       n_bootstrap=100, metric=False, alpha=0.1):
-  if metric == False:
-    opened_corr_flat = list()
-    closed_corr_flat = list()
-
-    for i in range(len(features_mat_1)):
-      opened_corr_flat.append(features_mat_1[i].flatten())
-      closed_corr_flat.append(features_mat_2[i].flatten())
-
-    X = opened_corr_flat + closed_corr_flat
-    y = [1] * 100 + [0] * 100  # Labels
-
-  if metric == True:
-    X = features_mat_1 + features_mat_2
-    y = [1] * 100 + [0] * 100  # Labels
-
-  # Split the data
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-  # Standardize the data
-  scaler = StandardScaler()
-  X_train_scaled = scaler.fit_transform(X_train)
-  X_test_scaled = scaler.transform(X_test)
-
-  selected_features = []
-  while not selected_features:
-    # Apply Lasso for feature selection
-    lasso = Lasso(alpha=alpha)
-    lasso.fit(X_train_scaled, y_train)
-
-    # Display the selected features
-    selected_features = [i for i, coef in enumerate(lasso.coef_) if coef != 0]
-
-    if not selected_features:
-      print(f"No features selected with alpha={alpha}. Decreasing alpha.")
-      alpha *= 0.5  # Decrease alpha (you can adjust the reduction factor)
-    else:
-      print(f"Selected features: {selected_features}")
-
+def xgb_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100, n_estimators=200, max_depth=3, learning_rate=0.3):
   # Create a reduced feature matrix with only the selected features
   X_train_selected = X_train_scaled[:, selected_features]
   X_test_selected = X_test_scaled[:, selected_features]
