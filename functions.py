@@ -115,7 +115,66 @@ def import_using_multi_threading(dataset_root, store_dir, fs, int_end, notch_fil
     for future in concurrent.futures.as_completed(futures):
       eeg_array.append(future.result())
 
-  np.save(f'{store_dir}/eeg_eyes_numpy_arrays_2.npy', eeg_array)
+  np.save(f'{store_dir}/eeg_eyes_numpy_arrays_{l_cut}-{h_cut}.npy', eeg_array)
+
+def contr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
+  num_array, ch_names = edf_to_numpy(path)
+
+  # preprocessing
+  # create mne raw file
+  info = mne.create_info(ch_names, fs)
+  loadedRaw = mne.io.RawArray(num_array[:, :int_end], info)
+
+  loadedRaw.notch_filter([notch_filt], picks=ch_names)
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # only keeping frequencies between 1-50 Hz
+  # downsampling the data
+  loadedRaw.resample(120, npad='auto')
+  result = loadedRaw._data
+
+  # np.save(f'{store_dir}/eeg_eyes_opened_raw_{sub_id}.npy', num_array)
+  return {'result': result, 'label': 0}
+
+
+# eyes open
+def depr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
+  num_array, ch_names = edf_to_numpy(path)
+
+  # preprocessing
+  info = mne.create_info(ch_names, fs)
+  loadedRaw = mne.io.RawArray(num_array[:, :int_end], info)
+
+  # remove frequencies
+  loadedRaw.notch_filter([notch_filt], picks=ch_names)
+  loadedRaw.filter(l_freq=0.5, h_freq=4.0, picks=ch_names)  # only keeping frequencies between 1-50 Hz
+
+  # downsampling the data
+  loadedRaw.resample(120, npad='auto')
+  result = loadedRaw._data
+
+  return {'result': result, 'label': 1}
+
+
+def import_depr_using_multi_threading(folder_path_healthy, folder_path_depr, store_dir, fs, int_end, notch_filt, l_cut, h_cut):
+  eeg_array = []
+
+  file_paths_healthy = [os.path.join(folder_path_healthy, f) for f in os.listdir(folder_path_healthy) if
+                        os.path.isfile(os.path.join(folder_path_healthy, f))]
+
+  file_paths_depr = [os.path.join(folder_path_depr, f) for f in os.listdir(folder_path_depr) if
+                     os.path.isfile(os.path.join(folder_path_depr, f))]
+
+  with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    for k in tqdm.tqdm(range(0, 100, 10)):
+      for i in range(k, k + 10):
+        control = file_paths_healthy[i]
+        future = executor.submit(contr_conn_metric, control, fs, int_end, notch_filt, l_cut, h_cut)
+        eeg_array.append(future.result())
+
+        depr = file_paths_depr[i]
+        future_2 = executor.submit(depr_conn_metric, depr, fs, int_end, notch_filt, l_cut, h_cut)
+        eeg_array.append(future_2.result())
+
+  np.save(f'{store_dir}/depression_numpy_arrays_{l_cut}-{h_cut}.npy', eeg_array)
 
 
 #--------------------Utility--------------------
