@@ -324,7 +324,7 @@ def imag_part_coh_features(trial, binarize=False, threshold = 0):
 #--------------------Data preparation--------------------
 
 # returns list of subjects for closed and opened
-def data_preparation(path, int_start, int_end, normalize):
+def data_preparation(path, int_start, int_end, normalize, truncate_electrodes = True):
   # load data
   eeg_data = np.load(path, allow_pickle=True)
 
@@ -345,9 +345,15 @@ def data_preparation(path, int_start, int_end, normalize):
   # Print the result
   eeg_data_signals = np.stack(eeg_data_new['result'], axis = 0)
 
-  # taking shorter interval and permuting data
-  eeg_data_permuted = np.transpose(eeg_data_signals[:,:,int_start:int_end], (0, 2, 1))
-  eeg_label_data = np.array(eeg_data_new['label'])
+  if truncate_electrodes == True:
+    # taking shorter interval and permuting data
+    eeg_data_permuted = np.transpose(eeg_data_signals[:,0:20,int_start:int_end], (0, 2, 1))
+    eeg_label_data = np.array(eeg_data_new['label'])
+
+  elif truncate_electrodes == False:
+    # taking shorter interval and permuting data
+    eeg_data_permuted = np.transpose(eeg_data_signals[:,:, int_start:int_end], (0, 2, 1))
+    eeg_label_data = np.array(eeg_data_new['label'])
 
   opened = list()
   closed = list()

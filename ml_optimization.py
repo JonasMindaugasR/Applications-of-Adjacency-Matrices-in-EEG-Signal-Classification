@@ -29,7 +29,8 @@ def process_file(filename):
                 path=f"{input_dir}/{filename}",
                 int_start=int_start,
                 int_end=int_end,
-                normalize=normalize
+                normalize=normalize,
+                truncate_electrodes=True
             )
 
             opened, closed = f.filter_dataset(
