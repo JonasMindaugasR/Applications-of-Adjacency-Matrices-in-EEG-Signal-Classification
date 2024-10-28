@@ -477,7 +477,7 @@ def prep_ml_dataset(features_mat_1, features_mat_2, metric=False):
   return X_train_scaled, X_test_scaled, y_train, y_test
 
 def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
-
+  selected_features = []
   while not selected_features:
     # Apply Lasso for feature selection
     lasso = Lasso(alpha=alpha)

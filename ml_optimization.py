@@ -1,5 +1,6 @@
 import functions as f
 import pandas as pd
+import openpyxl
 import tqdm
 import os
 import re
@@ -16,27 +17,27 @@ int_start = 4500
 int_end = 5000
 
 if __name__ == '__main__':
+    results_df = pd.DataFrame(columns=[
+        'interval start',
+        'interval end',
+        'normalized trial',
+        'l_freq',
+        'h_freq',
+        'binarized',
+        'adj_feature',
+        'method',
+        'Mean Accuracy',
+        'Mean F1 Score',
+        '95% CI for Accuracy Low',
+        '95% CI for Accuracy High',
+        '95% CI for F1 Score Low',
+        '95% CI for F1 Score High'
+    ])
     filenames = os.listdir(input_dir)
     for filename in tqdm.tqdm(filenames):
         # Use regex to find the frequency range pattern
         match = re.search(r'(\d+\.?\d*)-(\d+\.?\d*)', filename)
         if match:
-            results_df = pd.DataFrame(columns=[
-                'interval start',
-                'interval end',
-                'normalized trial',
-                'l_freq',
-                'h_freq',
-                'binarized',
-                'adj_feature',
-                'method',
-                'Mean Accuracy',
-                'Mean F1 Score',
-                '95% CI for Accuracy Low',
-                '95% CI for Accuracy High',
-                '95% CI for F1 Score Low',
-                '95% CI for F1 Score High'
-            ])
             for normalize in [True, False]:
                 opened_raw, closed_raw = f.data_preparation(path=f"{input_dir}/{filename}", int_start = int_start, int_end = int_end, normalize=normalize)
 
@@ -44,7 +45,7 @@ if __name__ == '__main__':
 
                 for binarize in [True, False]:
                     for upp_triangle in [True, False]:
-                        for feature in [f.plv_features, f.corr_features, f.pli_features]:
+                        for feature in [f.plv_features, f.corr_features, f.pli_features, f.imag_part_coh_features]: #, f.imag_part_coh_features
                             # calculate correlation matrix for one observation and append it to the list
                             opened_corr, closed_corr = f.calc_adj_features(opened, closed, feature, binarize=binarize, threshold=0, num_electrodes=num_electrodes)
 
@@ -76,9 +77,8 @@ if __name__ == '__main__':
                                     '95% CI for F1 Score High': [ci_f1_score[1]]
                                 })
 
-
                                 # Append the new row to the DataFrame
-                                results_df = pd.concat([results_df, new_row], ignore_index=False)
+                                results_df = pd.concat([results_df, new_row], ignore_index=True)
 
     # Save DataFrame as Excel
-    results_df.to_excel(f"{output_dir}/df_result.xlsx", index=False)
+    results_df.to_excel(f"{output_dir}/df_result_4500-5000.xlsx", index=False)
