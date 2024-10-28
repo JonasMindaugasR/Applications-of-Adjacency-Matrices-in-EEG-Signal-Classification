@@ -206,6 +206,11 @@ def _normalize_trial_eeg(eeg_trial, eeg_mean, eeg_std):
 
   return eeg_trial_normalized
 
+def _normalize_trial_eeg_per_elec(eeg_trial):
+  eeg_trial_normalized = (eeg_trial - np.mean(eeg_trial, axis=1, keepdims=True)) / np.std(eeg_trial, axis=1, keepdims=True)
+
+  return eeg_trial_normalized
+
 #--------------------Pearson's correlation--------------------
 
 # using correlation
@@ -358,7 +363,7 @@ def data_preparation(path, int_start, int_end, normalize, truncate_electrodes = 
   opened = list()
   closed = list()
 
-  if normalize==True:
+  if normalize=="dataset":
 
     eeg_mean = np.mean(eeg_data_permuted)
     eeg_std = np.std(eeg_data_permuted)
@@ -369,7 +374,15 @@ def data_preparation(path, int_start, int_end, normalize, truncate_electrodes = 
       else:
         closed.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:], eeg_mean, eeg_std))
 
-  if normalize==False:
+  if normalize=="electrode":
+
+    for i, k in enumerate(eeg_label_data):
+      if k == 1:
+        opened.append(_normalize_trial_eeg_per_elec(eeg_data_permuted[i,:,:]))
+      else:
+        closed.append(_normalize_trial_eeg_per_elec(eeg_data_permuted[i,:,:]))
+
+  if normalize=="not":
     for i, k in enumerate(eeg_label_data):
       if k == 1:
         opened.append(eeg_data_permuted[i,:,:]) #do not normalize trial for data_eyes

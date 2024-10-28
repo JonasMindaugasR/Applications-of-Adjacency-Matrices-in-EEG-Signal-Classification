@@ -6,14 +6,15 @@ import os
 import re
 import multiprocessing as mp
 
-dataset = "depression" # "eyes" "depression"
+dataset = "eyes" # "eyes" "depression"
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
 output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output"
 
-num_electrodes = 21
+num_electrodes = 64
+truncate_electrodes = False
 
-fs = 256
+fs = 160
 int_start = 2000
 int_end = 2500
 
@@ -24,13 +25,13 @@ def process_file(filename):
 
     match = re.search(r'(\d+\.?\d*)-(\d+\.?\d*)', filename)
     if match:
-        for normalize in [True, False]:
+        for normalize in ["electrode", "dataset", "not"]:
             opened_raw, closed_raw = f.data_preparation(
                 path=f"{input_dir}/{filename}",
                 int_start=int_start,
                 int_end=int_end,
                 normalize=normalize,
-                truncate_electrodes=True
+                truncate_electrodes=truncate_electrodes
             )
 
             opened, closed = f.filter_dataset(
@@ -75,6 +76,7 @@ def process_file(filename):
                                 'l_freq': float(match.group(1)),
                                 'h_freq': float(match.group(2)),
                                 'binarized': binarize,
+                                'upper triangle': upp_triangle,
                                 'adj_feature': feature.__name__,
                                 'method': method,
                                 'Mean Accuracy': mean_accuracy,
@@ -82,7 +84,8 @@ def process_file(filename):
                                 '95% CI for Accuracy Low': ci_accuracy[0],
                                 '95% CI for Accuracy High': ci_accuracy[1],
                                 '95% CI for F1 Score Low': ci_f1_score[0],
-                                '95% CI for F1 Score High': ci_f1_score[1]
+                                '95% CI for F1 Score High': ci_f1_score[1],
+                                'selected features': selected_features
                             })
     return results
 
@@ -102,4 +105,4 @@ if __name__ == '__main__':
     results_df = pd.DataFrame(all_results)
 
     # Save DataFrame to Excel
-    results_df.to_excel(f"{output_dir}/df_result_{int_start}-{int_end}.xlsx", index=False)
+    results_df.to_excel(f"{output_dir}/df_result_{int_start}-{int_end}_20_elec_total.xlsx", index=False)
