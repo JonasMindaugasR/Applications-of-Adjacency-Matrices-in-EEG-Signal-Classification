@@ -128,7 +128,7 @@ def contr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
   loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # only keeping frequencies between 1-50 Hz
   # downsampling the data
-  loadedRaw.resample(120, npad='auto')
+  loadedRaw.resample(256, npad='auto')
   result = loadedRaw._data
 
   # np.save(f'{store_dir}/eeg_eyes_opened_raw_{sub_id}.npy', num_array)
@@ -148,7 +148,7 @@ def depr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
   loadedRaw.filter(l_freq=0.5, h_freq=4.0, picks=ch_names)  # only keeping frequencies between 1-50 Hz
 
   # downsampling the data
-  loadedRaw.resample(120, npad='auto')
+  loadedRaw.resample(256, npad='auto')
   result = loadedRaw._data
 
   return {'result': result, 'label': 1}
@@ -289,7 +289,7 @@ def pli_features(trial, binarize=False, threshold = 0):
 #--------------------Imaginary part of coherence--------------------
 
 # imaginary part of coherence
-def imag_part_coherence(theta1, theta2, fs = 120):
+def imag_part_coherence(theta1, theta2, fs = 256):
     # Calculate the cross-spectral density (CSD)
     _, Pxy = signal.csd(theta1, theta2, fs=fs)
 

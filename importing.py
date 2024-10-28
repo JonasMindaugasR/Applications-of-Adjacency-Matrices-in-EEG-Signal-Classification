@@ -1,7 +1,7 @@
 import functions as f
 import time
 
-dataset = "eyes" # "eyes" "depression"
+dataset = "depression" # "eyes" "depression"
 
 dataset_root = r"H:/magistro_studijos/magis/kodai/dyconnmap-master/dyconnmap-master/examples/data/raw_data/eeg-motor-movementimagery-dataset-1.0.0/files"
 store_dir_eyes = r"H:/magistro_studijos/magis/data_eyes/output"
@@ -11,7 +11,7 @@ folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf neval
 folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
 store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
 
-fs = 120
+fs = 256
 int_end_eyes = 9000
 int_end_depr = 5000
 notch_filt = 50
