@@ -15,8 +15,8 @@ num_electrodes = 64
 truncate_electrodes = False
 
 fs = 160
-int_start = 2000
-int_end = 2500
+int_start = 4500
+int_end = 5000
 
 # Define a function that performs the processing for each file
 def process_file(filename):
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     results_df = pd.DataFrame(all_results)
 
     # Save DataFrame to Excel
-    results_df.to_excel(f"{output_dir}/df_result_{int_start}-{int_end}_20_elec_total.xlsx", index=False)
+    results_df.to_excel(f"{output_dir}/df_result{dataset}_{int_start}-{int_end}_20_elec_total.xlsx", index=False)
