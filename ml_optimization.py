@@ -6,17 +6,24 @@ import os
 import re
 import multiprocessing as mp
 
-dataset = "eyes" # "eyes" "depression"
+# dataset = "depression"
+# num_electrodes = 20
+# truncate_electrodes = True
+#
+# fs = 256
+# int_start = 2000
+# int_end = 2500
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output"
-
+dataset = "eyes"
 num_electrodes = 64
 truncate_electrodes = False
 
 fs = 160
 int_start = 4500
 int_end = 5000
+
+input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
+output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output"
 
 # Define a function that performs the processing for each file
 def process_file(filename):
@@ -94,7 +101,7 @@ if __name__ == '__main__':
     filenames = os.listdir(input_dir)
 
     # Use multiprocessing Pool to parallelize file processing
-    with mp.Pool(mp.cpu_count()) as pool:
+    with mp.Pool(mp.cpu_count()-3) as pool:
         # Collect all results in a list of lists
         all_results = list(tqdm.tqdm(pool.imap(process_file, filenames), total=len(filenames)))
 
@@ -105,4 +112,4 @@ if __name__ == '__main__':
     results_df = pd.DataFrame(all_results)
 
     # Save DataFrame to Excel
-    results_df.to_excel(f"{output_dir}/df_result{dataset}_{int_start}-{int_end}_20_elec_total.xlsx", index=False)
+    results_df.to_excel(f"{output_dir}/df_result_{dataset}_{int_start}-{int_end}_{num_electrodes}_elec_total_v2.xlsx", index=False)

@@ -75,7 +75,7 @@ def eye_opened_conn_metric(sub_id, dataset_root, fs, int_end, notch_filt, l_cut,
   loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # Only keeping frequencies between 1-50 Hz
 
   # Downsampling the data
-  loadedRaw.resample(120, npad='auto')
+  loadedRaw.resample(160, npad='auto')
   result = loadedRaw.get_data()
 
   return {'result': result, 'label': 1}
@@ -98,7 +98,7 @@ def eye_closed_conn_metric(sub_id, dataset_root, fs, int_end, notch_filt, l_cut,
   loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # Only keeping frequencies between 1-50 Hz
 
   # Downsampling the data
-  loadedRaw.resample(120, npad='auto')
+  loadedRaw.resample(160, npad='auto')
   result = loadedRaw.get_data()
 
   return {'result': result, 'label': 0}
