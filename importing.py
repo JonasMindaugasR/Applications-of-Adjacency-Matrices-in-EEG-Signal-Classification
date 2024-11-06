@@ -1,7 +1,7 @@
 import functions as f
 import time
 
-dataset = "eyes" # "eyes" "depression"
+dataset = "depression" # "eyes" "depression"
 
 dataset_root = r"H:/magistro_studijos/magis/kodai/dyconnmap-master/dyconnmap-master/examples/data/raw_data/eeg-motor-movementimagery-dataset-1.0.0/files"
 store_dir_eyes = r"H:/magistro_studijos/magis/data_eyes/output"

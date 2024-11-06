@@ -145,7 +145,7 @@ def depr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
 
   # remove frequencies
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
-  loadedRaw.filter(l_freq=0.5, h_freq=4.0, picks=ch_names)  # only keeping frequencies between 1-50 Hz
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # only keeping frequencies between 1-50 Hz
 
   # downsampling the data
   loadedRaw.resample(256, npad='auto')
