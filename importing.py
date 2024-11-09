@@ -40,5 +40,12 @@ if __name__ == '__main__':
                                                 notch_filt=notch_filt,
                                                 l_cut=lowcut[i],
                                                 h_cut=highcut[i])
+
+    if dataset == "depression":
+        f.import_depr_using_multi_threading_no_filt(folder_path_healthy=folder_path_healthy,
+                                                    folder_path_depr=folder_path_depr,
+                                                    store_dir=store_dir_depr,
+                                                    fs=fs_depression,
+                                                    int_end=int_end_depr)
     end_time_multi = time.time()
     print(end_time_multi-start_time_multi)

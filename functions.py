@@ -33,6 +33,8 @@ from sklearn.utils import resample
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LassoCV
+from sklearn.metrics import mutual_info_score
+
 
 import mne
 import tqdm
@@ -176,6 +178,58 @@ def import_depr_using_multi_threading(folder_path_healthy, folder_path_depr, sto
 
   np.save(f'{store_dir}/depression_numpy_arrays_{l_cut}-{h_cut}.npy', eeg_array)
 
+def contr_conn_metric_no_filt(path, fs, int_end):
+  num_array, ch_names = edf_to_numpy(path)
+
+  # preprocessing
+  # create mne raw file
+  info = mne.create_info(ch_names, fs)
+  loadedRaw = mne.io.RawArray(num_array[:, :int_end], info)
+
+  # downsampling the data
+  loadedRaw.resample(256, npad='auto')
+  result = loadedRaw._data
+
+  # np.save(f'{store_dir}/eeg_eyes_opened_raw_{sub_id}.npy', num_array)
+  return {'result': result, 'label': 0}
+
+
+# eyes open
+def depr_conn_metric_no_filt(path, fs, int_end):
+  num_array, ch_names = edf_to_numpy(path)
+
+  # preprocessing
+  info = mne.create_info(ch_names, fs)
+  loadedRaw = mne.io.RawArray(num_array[:, :int_end], info)
+
+  # downsampling the data
+  loadedRaw.resample(256, npad='auto')
+  result = loadedRaw._data
+
+  return {'result': result, 'label': 1}
+
+
+def import_depr_using_multi_threading_no_filt(folder_path_healthy, folder_path_depr, store_dir, fs, int_end):
+  eeg_array = []
+
+  file_paths_healthy = [os.path.join(folder_path_healthy, f) for f in os.listdir(folder_path_healthy) if
+                        os.path.isfile(os.path.join(folder_path_healthy, f))]
+
+  file_paths_depr = [os.path.join(folder_path_depr, f) for f in os.listdir(folder_path_depr) if
+                     os.path.isfile(os.path.join(folder_path_depr, f))]
+
+  with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    for k in tqdm.tqdm(range(0, 100, 10)):
+      for i in range(k, k + 10):
+        control = file_paths_healthy[i]
+        future = executor.submit(contr_conn_metric_no_filt, control, fs, int_end)
+        eeg_array.append(future.result())
+
+        depr = file_paths_depr[i]
+        future_2 = executor.submit(depr_conn_metric_no_filt, depr, fs, int_end)
+        eeg_array.append(future_2.result())
+
+  np.save(f'{store_dir}/depression_numpy_arrays_no_filt.npy', eeg_array)
 
 #--------------------Utility--------------------
 
@@ -326,10 +380,26 @@ def imag_part_coh_features(trial, binarize=False, threshold = 0):
     feat.append(list(np.squeeze(imag_part_coh_matrix[i, :])))
   return feat
 
+# Function to compute mutual information between two time series
+def mutual_information(ts1, ts2, bins=10):
+    c_xy = np.histogram2d(ts1, ts2, bins)[0]
+    mi = mutual_info_score(None, None, contingency=c_xy)
+    return mi
+
+# Mutual information feature extraction
+def mi_features(eeg_data, num_electrodes):
+    mi_matrix = np.zeros((num_electrodes, num_electrodes))
+    for i in range(num_electrodes):
+        for j in range(i + 1, num_electrodes):
+            mi_value = mutual_information(eeg_data[i, :], eeg_data[j, :])
+            mi_matrix[i, j] = mi_value
+            mi_matrix[j, i] = mi_value  # Symmetric assignment
+    return mi_matrix.tolist()
+
 #--------------------Data preparation--------------------
 
 # returns list of subjects for closed and opened
-def data_preparation(path, int_start, int_end, normalize, truncate_electrodes = True):
+def data_preparation(path, int_start, int_end, normalize, filter=False, truncate_electrodes = True, lowcut=None, highcut=None, fs=None, order=4):
   # load data
   eeg_data = np.load(path, allow_pickle=True)
 
@@ -374,13 +444,21 @@ def data_preparation(path, int_start, int_end, normalize, truncate_electrodes = 
       else:
         closed.append(_normalize_trial_eeg(eeg_data_permuted[i,:,:], eeg_mean, eeg_std))
 
-  if normalize=="electrode":
+  if normalize=="electrode" and filter == False:
 
     for i, k in enumerate(eeg_label_data):
       if k == 1:
         opened.append(_normalize_trial_eeg_per_elec(eeg_data_permuted[i,:,:]))
       else:
         closed.append(_normalize_trial_eeg_per_elec(eeg_data_permuted[i,:,:]))
+
+  if normalize=="electrode" and filter == True:
+
+    for i, k in enumerate(eeg_label_data):
+      if k == 1:
+        opened.append(_normalize_trial_eeg_per_elec(bandpass_filter(eeg_data_permuted[i,:,:], lowcut, highcut, fs, order)))
+      else:
+        closed.append(_normalize_trial_eeg_per_elec(bandpass_filter(eeg_data_permuted[i,:,:], lowcut, highcut, fs, order )))
 
   if normalize=="not":
     for i, k in enumerate(eeg_label_data):
@@ -495,6 +573,29 @@ def prep_ml_dataset(features_mat_1, features_mat_2, metric=False):
 
   return X_train_scaled, X_test_scaled, y_train, y_test
 
+def prep_ml_dataset_all(features_mat_1, features_mat_2, metric=False):
+  if metric == False:
+    opened_corr_flat = list()
+    closed_corr_flat = list()
+
+    for i in range(len(features_mat_1)):
+      opened_corr_flat.append(features_mat_1[i].flatten())
+      closed_corr_flat.append(features_mat_2[i].flatten())
+
+    X = opened_corr_flat + closed_corr_flat
+    y = [1] * 100 + [0] * 100  # Labels
+
+  if metric == True:
+    X = features_mat_1 + features_mat_2
+    y = [1] * 100 + [0] * 100  # Labels
+
+  # Standardize the data
+  scaler = StandardScaler()
+  X_scaled = scaler.fit_transform(X)
+
+
+  return X_scaled, y
+
 def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
   selected_features = []
   while not selected_features:
@@ -510,10 +611,15 @@ def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
 
   return selected_features
 
-def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100):
-  # Create a reduced feature matrix with only the selected features
-  X_train_selected = X_train_scaled[:, selected_features]
-  X_test_selected = X_test_scaled[:, selected_features]
+def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
 
   accuracies = []
   f1_scores = []
@@ -543,10 +649,15 @@ def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_
   return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
 
 
-def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100, n_estimators=100, max_depth=None):
-  # Create a reduced feature matrix with only the selected features
-  X_train_selected = X_train_scaled[:, selected_features]
-  X_test_selected = X_test_scaled[:, selected_features]
+def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100, n_estimators=100, max_depth=None):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
 
   accuracies = []
   f1_scores = []
@@ -578,10 +689,15 @@ def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_f
   return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
 
 
-def xgb_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features, n_bootstrap=100, n_estimators=200, max_depth=3, learning_rate=0.3):
-  # Create a reduced feature matrix with only the selected features
-  X_train_selected = X_train_scaled[:, selected_features]
-  X_test_selected = X_test_scaled[:, selected_features]
+def xgb_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100, n_estimators=200, max_depth=3, learning_rate=0.3):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
 
   accuracies = []
   f1_scores = []
