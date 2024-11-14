@@ -2,7 +2,7 @@ import os
 import re
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, cross_val_score
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -11,11 +11,15 @@ import functions as f
 import tqdm
 import ast
 
+dataset = "depression"
+
 # Define the directories
-input_ml_dir = "H:/magistro_studijos/magis/data_eyes/ml_output"
-input_dir = "H:/magistro_studijos/magis/data_eyes/graph_output"
-output_dir = "H:/magistro_studijos/magis/data_eyes/ml_optim_output"
+input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_lasso_4000_int"
+input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output"
+output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_4000_int"
 pattern = r"(plv_features|pli_features|corr_features|imag_part_coh_features)_(weight|bin)_(\d+\.\d+-\d+\.\d+)\.xlsx"
+
+pattern_combined = r"metrics_(\d+\.\d+-\d+\.\d+).*_(bin|weight)_combined"
 
 # Initialize models and hyperparameters
 models = {
@@ -77,7 +81,7 @@ def get_best_feature_sets(df_res):
     df_res_sorted = df_res.sort_values(by='Mean Accuracy', ascending=False)
 
     # Drop duplicate groups based on 'method', 'feature_type', 'type', and 'freq', keeping the row with the highest accuracy
-    best_features = df_res_sorted.drop_duplicates(subset=['method', 'feature_type', 'type', 'freq'])
+    best_features = df_res_sorted.drop_duplicates(subset=['method', 'feature_type', 'type'])
 
     return best_features
 
@@ -114,13 +118,22 @@ def train_and_optimize_models(X_train, y_train, X_test, y_test, feature_set):
     for model_name, model in models.items():
         print(f"Optimizing {model_name}...")
         best_model, best_params = optimize_model(model, param_grids[model_name], X_train_selected, y_train)
+
+        # Perform cross-validation on the training set
+        cv_scores = cross_val_score(best_model, X_train_selected, y_train, cv=5, scoring='accuracy')
+        mean_cv_accuracy = cv_scores.mean()
+        std_cv_accuracy = cv_scores.std()
+
+        # Evaluate on the test set
         y_pred = best_model.predict(X_test_selected)
-        accuracy = accuracy_score(y_test, y_pred)
+        test_accuracy = accuracy_score(y_test, y_pred)
 
         results[model_name] = {
             'best_model': best_model,
             'best_params': best_params,
-            'accuracy': accuracy
+            'cv_mean_accuracy': mean_cv_accuracy,
+            'cv_std_accuracy': std_cv_accuracy,
+            'test_accuracy': test_accuracy
         }
 
     return results
@@ -132,7 +145,7 @@ def main(pattern):
 
     # Identify the best feature sets based on maximum accuracy
     best_features = get_best_feature_sets(df_res)
-    best_features = best_features.drop(columns=['method']).drop_duplicates()
+    best_features = best_features.drop(columns=['method']).drop_duplicates(subset=['feature_type', 'type'])
 
     # Iterate over each row in the best_features DataFrame
     for index, row in tqdm.tqdm(best_features.iterrows()):
@@ -175,5 +188,5 @@ def main(pattern):
 
 # Run the main function
 if __name__ == '__main__':
-    print(all_results = main(pattern))
+    print(main(pattern))
 
