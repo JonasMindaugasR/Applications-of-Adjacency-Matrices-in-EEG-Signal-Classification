@@ -7,13 +7,13 @@ dataset_root = r"H:/magistro_studijos/magis/kodai/dyconnmap-master/dyconnmap-mas
 store_dir_eyes = r"H:/magistro_studijos/magis/data_eyes/output"
 
 
-# folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/sveiki"
-# folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
-# store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
+folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/sveiki"
+folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
+store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
 
-folder_path_healthy = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/sveiki"
-folder_path_depr = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/depresija"
-store_dir_depr = r"H:/magistro_studijos/magis/data_depression_filt/output"
+# folder_path_healthy = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/sveiki"
+# folder_path_depr = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/depresija"
+# store_dir_depr = r"H:/magistro_studijos/magis/data_depression_filt/output"
 
 fs_eyes = 160
 fs_depression = 256
