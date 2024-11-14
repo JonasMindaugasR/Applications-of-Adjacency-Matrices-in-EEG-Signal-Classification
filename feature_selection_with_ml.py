@@ -16,7 +16,15 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-# dataset = "depression"
+dataset = "depression"
+num_electrodes = 20
+truncate_electrodes = True
+
+fs = 256
+int_start = 1000
+int_end = 5000
+
+# dataset = "depression_filt"
 # num_electrodes = 20
 # truncate_electrodes = True
 #
@@ -24,18 +32,18 @@ import matplotlib.pyplot as plt
 # int_start = 2000
 # int_end = 2500
 
-dataset = "eyes"
-num_electrodes = 64
-truncate_electrodes = False
-
-fs = 160
-int_start = 4000
-int_end = 4500
+# dataset = "eyes"
+# num_electrodes = 64
+# truncate_electrodes = False
+#
+# fs = 160
+# int_start = 4000
+# int_end = 4500
 
 matrices_combination = 'bands'
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output"
-input_combined_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output"
+input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
+input_combined_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
 # input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_{int_start}_{int_end}"
 # output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{int_start}_{int_end}"
 
@@ -218,8 +226,6 @@ def opt_lasso_graph_kernels(label_1_graph, label_0_graph):
         label_1_graph_selected = np.zeros_like(label_1_graph_flat)
         label_0_graph_selected = np.zeros_like(label_0_graph_flat)
 
-        print(label_1_graph_selected.shape)
-
         # Set the selected features to their original values, others remain 0
         label_1_graph_selected[:, feature_set] = label_1_graph_flat[:, feature_set]
         label_0_graph_selected[:, feature_set] = label_0_graph_flat[:, feature_set]
@@ -247,47 +253,66 @@ def opt_lasso_graph_kernels(label_1_graph, label_0_graph):
         graphs = graphs_1 + graphs_0
         labels = [1] * len(graphs_1) + [0] * len(graphs_0)
 
-        # Create the Weisfeiler-Lehman kernel with SvmTheta as the base kernel
-        base_graph_kernel = (SvmTheta, {})  # Pass SvmTheta with an empty parameter dictionary
-        wl_kernel = WeisfeilerLehman(base_graph_kernel=base_graph_kernel, n_iter=5)
-
-        # Fit and transform the graphs
-        K = wl_kernel.fit_transform(graphs)
-
-        # # Create the Shortest Path kernel (or any other kernel)
-        # sp_kernel = ShortestPath()  # You can change this to another kernel if needed
-        # K = sp_kernel.fit_transform(graphs)
-
-        # Plot kernel matrix heatmap
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(K, cmap='viridis', cbar=True)
-        plt.title("Kernel Matrix Heatmap")
-        plt.show()
-
-        # # Step 1: Perform the train-test split
-        # train_indices, test_indices = train_test_split(np.arange(K.shape[0]), test_size=0.2, random_state=42)
+        # # Create the Weisfeiler-Lehman kernel with SvmTheta as the base kernel
+        # base_graph_kernel = (SvmTheta, {})  # Pass SvmTheta with an empty parameter dictionary
+        # wl_kernel = WeisfeilerLehman(base_graph_kernel=base_graph_kernel, n_iter=5)
         #
-        # # Step 2: Create the training and testing kernel matrices
-        # K_train = K[train_indices][:, train_indices]  # 140x140 kernel matrix
-        # K_test = K[test_indices][:, train_indices]  # 60x140 kernel matrix (to test on training subjects)
-        # y_train = np.array(labels)[train_indices]  # Corresponding labels for training
-        # y_test = np.array(labels)[test_indices]  # Corresponding labels for testing
-        #
-        # # Initialize SVM classifier with precomputed kernel
-        # svm = SVC(kernel="precomputed")
-        # svm.fit(K_train, y_train)
-        #
-        # # Predict and evaluate
-        # y_pred = svm.predict(K_test)
-        # accuracy = accuracy_score(y_test, y_pred)
-        # print(f"Test Accuracy: {accuracy:.2f}")
+        # # Fit and transform the graphs
+        # K = wl_kernel.fit_transform(graphs)
+
+        # Create the Shortest Path kernel (or any other kernel)
+        sp_kernel = ShortestPath()  # You can change this to another kernel if needed
+        K = sp_kernel.fit_transform(graphs)
+
+        # # Plot kernel matrix heatmap
+        # plt.figure(figsize=(10, 8))
+        # sns.heatmap(K, cmap='viridis', cbar=True)
+        # plt.title("Kernel Matrix Heatmap")
+        # plt.show()
+
+        # Step 1: Perform the train-test split
+        train_indices, test_indices = train_test_split(np.arange(K.shape[0]), test_size=0.2, random_state=42)
+
+        # Step 2: Create the training and testing kernel matrices
+        K_train = K[train_indices][:, train_indices]  # 140x140 kernel matrix
+        K_test = K[test_indices][:, train_indices]  # 60x140 kernel matrix (to test on training subjects)
+        y_train = np.array(labels)[train_indices]  # Corresponding labels for training
+        y_test = np.array(labels)[test_indices]  # Corresponding labels for testing
+
+        # Initialize SVM classifier with precomputed kernel
+        # Initialize parameters
+        n_bootstrap = 3  # Number of bootstrap iterations
+        accuracies = []
+
+        # Perform bootstrap sampling
+        for _ in range(n_bootstrap):
+            # Create a bootstrap sample (sampling with replacement)
+            indices = np.random.choice(len(K_train), size=len(K_train), replace=True)
+            X_train_resampled = K_train[indices]
+            y_train_resampled = y_train[indices]
+
+            # Train the SVM classifier with the precomputed kernel on the resampled data
+            svm = SVC(kernel="precomputed")
+            svm.fit(X_train_resampled, y_train_resampled)
+
+            # Evaluate the model on the test set
+            y_pred = svm.predict(K_test)
+            accuracy = accuracy_score(y_test, y_pred)
+            accuracies.append(accuracy)
+
+        # Calculate the mean and standard deviation of accuracies across all bootstrap iterations
+        mean_accuracy = np.mean(accuracies)
+        std_accuracy = np.std(accuracies)
+
+        print(f"Mean Test Accuracy: {mean_accuracy:.2f}")
+        print(f"Standard Deviation of Accuracy: {std_accuracy:.2f}")
 
         return "done"
 
 
 
-def process_ml(filename_0, method = "pca"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}/"
+def process_ml(filename_0, method = "lasso"):
+    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_4000_int/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")
@@ -307,8 +332,8 @@ def process_ml(filename_0, method = "pca"):
     if method == "pca":
         results = opt_pca_ml_file(label_1_graph, label_0_graph)
     if method == "spectral":
-        results = opt_spectral_ml_file(label_1_graph, label_0_graph)
-    # opt_lasso_graph_kernels(label_1_graph, label_0_graph)
+        opt_lasso_graph_kernels(label_1_graph, label_0_graph)
+    opt_lasso_graph_kernels(label_1_graph, label_0_graph)
 
     # Convert to DataFrame
     results_df = pd.DataFrame(results)
@@ -351,7 +376,7 @@ def process_ml_no_filt(filename_0, method):
     return "done"
 
 def process_ml_combined_metrics(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_metrics/"
+    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_metrics_4000_int/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")
@@ -383,7 +408,7 @@ def process_ml_combined_metrics(filename_0, method = "lasso"):
     return "done"
 
 def process_ml_combined_bands(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_bands/"
+    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_bands_4000_int/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")

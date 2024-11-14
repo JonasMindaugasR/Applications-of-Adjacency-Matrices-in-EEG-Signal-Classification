@@ -11,8 +11,8 @@ num_electrodes = 20
 truncate_electrodes = True
 
 fs = 256
-int_start = 2000
-int_end = 2500
+int_start = 1000
+int_end = 5000
 
 # dataset = "eyes"
 # num_electrodes = 64
@@ -23,7 +23,7 @@ int_end = 2500
 # int_end = 4500
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_bandpass_filt"
+output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
 # output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_{int_start}_{int_end}"
 
 def calc_graph(filename):

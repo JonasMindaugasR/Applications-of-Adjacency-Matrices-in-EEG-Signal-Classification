@@ -7,9 +7,13 @@ dataset_root = r"H:/magistro_studijos/magis/kodai/dyconnmap-master/dyconnmap-mas
 store_dir_eyes = r"H:/magistro_studijos/magis/data_eyes/output"
 
 
-folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/sveiki"
-folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
-store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
+# folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/sveiki"
+# folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
+# store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
+
+folder_path_healthy = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/sveiki"
+folder_path_depr = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/depresija"
+store_dir_depr = r"H:/magistro_studijos/magis/data_depression_filt/output"
 
 fs_eyes = 160
 fs_depression = 256
@@ -41,11 +45,11 @@ if __name__ == '__main__':
                                                 l_cut=lowcut[i],
                                                 h_cut=highcut[i])
 
-    if dataset == "depression":
-        f.import_depr_using_multi_threading_no_filt(folder_path_healthy=folder_path_healthy,
-                                                    folder_path_depr=folder_path_depr,
-                                                    store_dir=store_dir_depr,
-                                                    fs=fs_depression,
-                                                    int_end=int_end_depr)
+    # if dataset == "depression":
+    #     f.import_depr_using_multi_threading_no_filt(folder_path_healthy=folder_path_healthy,
+    #                                                 folder_path_depr=folder_path_depr,
+    #                                                 store_dir=store_dir_depr,
+    #                                                 fs=fs_depression,
+    #                                                 int_end=int_end_depr)
     end_time_multi = time.time()
     print(end_time_multi-start_time_multi)
