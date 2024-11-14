@@ -144,7 +144,7 @@ def main(pattern):
         var_features = ast.literal_eval(row['selected features'])
 
         filename_1 = f"{feature_type}_label_1_{label}_{frequency_range}.npy"
-        filename_0 = f"{feature_type}_label_1_{label}_{frequency_range}.npy"
+        filename_0 = f"{feature_type}_label_0_{label}_{frequency_range}.npy"
 
         label_0_graph = np.load(f"{input_dir}/{filename_0}")
         label_1_graph = np.load(f"{input_dir}/{filename_1}")
@@ -175,5 +175,5 @@ def main(pattern):
 
 # Run the main function
 if __name__ == '__main__':
-    all_results = main(pattern)
+    print(all_results = main(pattern))
 
