@@ -40,7 +40,7 @@ int_end = 5000
 # int_start = 4000
 # int_end = 4500
 
-matrices_combination = 'bands'
+matrices_combination = 'non'
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
 input_combined_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
@@ -333,7 +333,6 @@ def process_ml(filename_0, method = "lasso"):
         results = opt_pca_ml_file(label_1_graph, label_0_graph)
     if method == "spectral":
         opt_lasso_graph_kernels(label_1_graph, label_0_graph)
-    opt_lasso_graph_kernels(label_1_graph, label_0_graph)
 
     # Convert to DataFrame
     results_df = pd.DataFrame(results)
@@ -397,7 +396,7 @@ def process_ml_combined_metrics(filename_0, method = "lasso"):
         results = opt_pca_ml_file(label_1_graph, label_0_graph)
     if method == "spectral":
         results = opt_spectral_ml_file(label_1_graph, label_0_graph)
-    # opt_lasso_graph_kernels(label_1_graph, label_0_graph)
+        # opt_lasso_graph_kernels(label_1_graph, label_0_graph)
 
     # Convert to DataFrame
     results_df = pd.DataFrame(results)

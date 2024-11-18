@@ -23,31 +23,11 @@ int_end = 5000
 # int_end = 4500
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
-# output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_{int_start}_{int_end}"
+output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output"
 
 def calc_graph(filename):
 
     match = re.search(r'(\d+\.?\d*)-(\d+\.?\d*)', filename)
-    # if "no_filt" in filename:
-    #     label_1, label_0 = f.data_preparation(path=f"{input_dir}/{filename}",
-    #                                           int_start=int_start,
-    #                                           int_end=int_end,
-    #                                           normalize="electrode",
-    #                                           truncate_electrodes=truncate_electrodes)
-    #
-    #     for binarize in [True, False]:
-    #         for feature in [f.plv_features, f.corr_features, f.pli_features, f.imag_part_coh_features]:
-    #             label_1_adj, label_0_adj = f.calc_adj_features(label_1, label_0,
-    #                                                            feature, binarize=binarize, threshold=0,
-    #                                                            num_electrodes=num_electrodes)
-    #
-    #             if binarize == True:
-    #                 np.save(f"{output_dir}_no_filt/{feature.__name__}_label_1_bin_no_filt", label_1_adj)
-    #                 np.save(f"{output_dir}_no_filt/{feature.__name__}_label_0_bin_no_filt", label_0_adj)
-    #             elif binarize == False:
-    #                 np.save(f"{output_dir}_no_filt/{feature.__name__}_label_1_weight_no_filt", label_1_adj)
-    #                 np.save(f"{output_dir}_no_filt/{feature.__name__}_label_0_weight_no_filt", label_0_adj)
 
     if match:
         label_1, label_0 = f.data_preparation(path=f"{input_dir}/{filename}",
