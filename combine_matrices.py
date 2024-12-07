@@ -57,21 +57,23 @@ def combine_bands(filename_0):
     band_2_label_1 = np.load(f"{input_dir}/{feature}_label_1_{label}_4.0-8.0.npy")
     band_3_label_1 = np.load(f"{input_dir}/{feature}_label_1_{label}_8.0-12.0.npy")
     band_4_label_1 = np.load(f"{input_dir}/{feature}_label_1_{label}_12.0-30.0.npy")
+    band_5_label_1 = np.load(f"{input_dir}/{feature}_label_1_{label}_30.0-40.0.npy")
 
     combined_tensors_label_1 = combine_tensors(band_1_label_1, band_2_label_1)
     combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_3_label_1)
     combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_4_label_1)
-
-
+    combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_5_label_1)
 
     band_1_label_0 = np.load(f"{input_dir}/{feature}_label_0_{label}_0.5-4.0.npy")
     band_2_label_0 = np.load(f"{input_dir}/{feature}_label_0_{label}_4.0-8.0.npy")
     band_3_label_0 = np.load(f"{input_dir}/{feature}_label_0_{label}_8.0-12.0.npy")
     band_4_label_0 = np.load(f"{input_dir}/{feature}_label_0_{label}_12.0-30.0.npy")
+    band_5_label_0 = np.load(f"{input_dir}/{feature}_label_0_{label}_30.0-40.0.npy")
 
     combined_tensors_label_0 = combine_tensors(band_1_label_0, band_2_label_0)
     combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_3_label_0)
     combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_4_label_0)
+    combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_5_label_0)
 
     np.save(f"{output_dir}/{feature}_label_1_{label}_combined", combined_tensors_label_1)
     np.save(f"{output_dir}/{feature}_label_0_{label}_combined", combined_tensors_label_0)

@@ -20,8 +20,8 @@ fs_depression = 256
 int_end_eyes = 9000
 int_end_depr = 5000
 notch_filt = 50
-lowcut = [1.0, 0.5, 4.0, 8.0, 12.0]
-highcut = [40.0, 4.0, 8.0, 12.0, 30.0]
+lowcut = [0.5, 0.5, 4.0, 8.0, 12.0, 30.0]
+highcut = [40.0, 4.0, 8.0, 12.0, 30.0, 40.0]
 
 
 if __name__ == '__main__':
