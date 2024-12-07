@@ -16,33 +16,25 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-dataset = "depression"
-num_electrodes = 20
-truncate_electrodes = True
-
-fs = 256
-int_start = 1000
-int_end = 5000
-
-# dataset = "depression_filt"
+# dataset = "depression"
 # num_electrodes = 20
 # truncate_electrodes = True
 #
 # fs = 256
-# int_start = 2000
-# int_end = 2500
+# int_start = 1000
+# int_end = 5000
 
-# dataset = "eyes"
-# num_electrodes = 64
-# truncate_electrodes = False
-#
-# fs = 160
-# int_start = 4000
-# int_end = 4500
+dataset = "eyes"
+num_electrodes = 64
+truncate_electrodes = False
+
+fs = 160
+int_start = 4000
+int_end = 4500
 
 matrices_combination = 'non'
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
+input_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/graph_output_fir_iir"
 input_combined_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
 # input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_{int_start}_{int_end}"
 # output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{int_start}_{int_end}"
@@ -312,7 +304,7 @@ def opt_lasso_graph_kernels(label_1_graph, label_0_graph):
 
 
 def process_ml(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_4000_int/"
+    output_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/ml_output_{method}_fir_iir/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")
@@ -339,37 +331,6 @@ def process_ml(filename_0, method = "lasso"):
 
     # Save DataFrame to Excel
     results_df.to_excel(f"{output_dir}/{feature}_{label}_{frequency_range}.xlsx",index=False)
-
-
-    return "done"
-
-def process_ml_no_filt(filename_0, method):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}/"
-    os.makedirs(f"{output_dir}", exist_ok=True)
-
-    filename_1 = filename_0.replace("label_0", "label_1")
-
-    pattern = r"(plv_features|pli_features|corr_features|imag_part_coh_features).*_(bin|weight)_no_filt"
-
-    match = re.search(pattern, filename_0)
-    if match:
-        feature, label = match.groups()
-
-    label_1_graph = np.load(f"{input_dir}/{filename_1}")
-    label_0_graph = np.load(f"{input_dir}/{filename_0}")
-
-    if method == "lasso":
-        results = opt_lasso_ml_file(label_1_graph, label_0_graph)
-    if method == "pca":
-        results = opt_pca_ml_file(label_1_graph, label_0_graph)
-    if method == "spectral":
-        results = opt_spectral_ml_file(label_1_graph, label_0_graph)
-
-    # Convert to DataFrame
-    results_df = pd.DataFrame(results)
-
-    # Save DataFrame to Excel
-    results_df.to_excel(f"{output_dir}/{feature}_{label}_no_filt.xlsx",index=False)
 
 
     return "done"

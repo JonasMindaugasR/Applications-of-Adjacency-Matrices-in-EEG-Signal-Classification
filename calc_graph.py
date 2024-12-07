@@ -22,8 +22,8 @@ int_end = 5000
 # int_start = 4000
 # int_end = 4500
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}/output"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output"
+input_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/output"
+output_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/graph_output"
 
 def calc_graph(filename):
 

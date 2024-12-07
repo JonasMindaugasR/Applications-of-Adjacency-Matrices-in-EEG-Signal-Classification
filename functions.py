@@ -75,6 +75,8 @@ def eye_opened_conn_metric(sub_id, dataset_root, fs, int_end, notch_filt, l_cut,
   # Remove frequencies
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
   loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # Only keeping frequencies between 1-50 Hz
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='fir', fir_design='firwin')
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='iir', iir_params=dict(order=4, ftype='butter'))
 
   # Downsampling the data
   loadedRaw.resample(160, npad='auto')
@@ -97,7 +99,9 @@ def eye_closed_conn_metric(sub_id, dataset_root, fs, int_end, notch_filt, l_cut,
 
   # Remove frequencies
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
-  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # Only keeping frequencies between 1-50 Hz
+  # loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # Only keeping frequencies between 1-50 Hz
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='fir', fir_design='firwin')
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='iir', iir_params=dict(order=4, ftype='butter'))
 
   # Downsampling the data
   loadedRaw.resample(160, npad='auto')
@@ -128,7 +132,9 @@ def contr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
   loadedRaw = mne.io.RawArray(num_array[:, :int_end], info)
 
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
-  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # only keeping frequencies between 1-50 Hz
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='fir', fir_design='firwin')
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='iir', iir_params=dict(order=4, ftype='butter'))
   # downsampling the data
   loadedRaw.resample(256, npad='auto')
   result = loadedRaw._data
@@ -148,6 +154,8 @@ def depr_conn_metric(path, fs, int_end, notch_filt, l_cut, h_cut):
   # remove frequencies
   loadedRaw.notch_filter([notch_filt], picks=ch_names)
   loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names)  # only keeping frequencies between 1-50 Hz
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='fir', fir_design='firwin')
+  loadedRaw.filter(l_freq=l_cut, h_freq=h_cut, picks=ch_names, method='iir', iir_params=dict(order=4, ftype='butter'))
 
   # downsampling the data
   loadedRaw.resample(256, npad='auto')
