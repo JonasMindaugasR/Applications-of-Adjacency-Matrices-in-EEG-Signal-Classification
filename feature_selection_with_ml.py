@@ -105,7 +105,7 @@ def opt_lasso_ml_file(label_1_graph, label_0_graph):
 
     return all_results
 
-def opt_pca_ml_file(label_1_graph, label_0_graph, n_components=10):
+def opt_pca_ml_file(label_1_graph, label_0_graph):
     # Flatten adjacency matrices
     label_1_graph_flat, label_0_graph_flat = f.flatten_adj_mat(
         label_1_graph, label_0_graph,
@@ -119,16 +119,24 @@ def opt_pca_ml_file(label_1_graph, label_0_graph, n_components=10):
         metric=False
     )
 
-    # Apply PCA to reduce dimensionality
-    pca = PCA(n_components=n_components)
-    X_train_pca = pca.fit_transform(X_train_scaled)
-    X_test_pca = pca.transform(X_test_scaled)
+    # create grid for components
+    n_components = list(range(1, 11))
+
+    all_results = []
+    # iterate over number of pca components
+    for n_component in n_components:
+        # Apply PCA to reduce dimensionality
+        pca = PCA(n_components=n_component)
+        X_train_pca = pca.fit_transform(X_train_scaled)
+        X_test_pca = pca.transform(X_test_scaled)
 
 
-    # Run machine learning models on PCA-transformed data
-    results = run_ml_models(X_train_pca, X_test_pca, y_train, y_test)
+        # Run machine learning models on PCA-transformed data
+        results = run_ml_models(X_train_pca, X_test_pca, y_train, y_test, n_component)
 
-    return results
+        all_results.extend(results)
+
+    return all_results
 
 # TODO: FIX somehow breaks after one iteration
 def opt_spectral_ml_file(label_1_graph, label_0_graph, n_components=3):
