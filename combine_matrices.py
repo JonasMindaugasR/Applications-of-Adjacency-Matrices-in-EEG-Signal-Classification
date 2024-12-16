@@ -19,8 +19,8 @@ int_end = 5000
 # truncate_electrodes = False
 #
 # fs = 160
-# int_start = 4000
-# int_end = 4500
+# int_start = 3500
+# int_end = 7500
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
 output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
@@ -79,6 +79,8 @@ def combine_bands(filename_0):
     np.save(f"{output_dir}/{feature}_label_0_{label}_combined", combined_tensors_label_0)
 
     return
+
+
 def combine_metrics(filename_0):
     filename_1 = filename_0.replace("label_0", "label_1")
 
@@ -111,6 +113,9 @@ def combine_metrics(filename_0):
     np.save(f"{output_dir}/metrics_{freq}_label_1_{label}_combined", combined_tensors_label_1)
     np.save(f"{output_dir}/metrics_{freq}_label_0_{label}_combined", combined_tensors_label_0)
 
+    return
+
+def combine_metrics_fully(filename_0):
     return
 
 # TODO: add function to combine channels from all frequencies into one array and then calculate matrices

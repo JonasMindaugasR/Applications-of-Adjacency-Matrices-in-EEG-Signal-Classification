@@ -29,8 +29,8 @@ num_electrodes = 64
 truncate_electrodes = False
 
 fs = 160
-int_start = 4000
-int_end = 4500
+int_start = 3500
+int_end = 7500
 
 matrices_combination = 'non'
 

@@ -19,8 +19,8 @@ int_end = 5000
 # truncate_electrodes = False
 #
 # fs = 160
-# int_start = 4000
-# int_end = 4500
+# int_start = 3500
+# int_end = 7500
 
 input_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/output"
 output_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/graph_output"
