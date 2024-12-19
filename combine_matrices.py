@@ -6,24 +6,24 @@ import re
 import multiprocessing as mp
 import numpy as np
 
-dataset = "depression"
-num_electrodes = 20
-truncate_electrodes = True
-
-fs = 256
-int_start = 1000
-int_end = 5000
-
-# dataset = "eyes"
-# num_electrodes = 64
-# truncate_electrodes = False
+# dataset = "depression"
+# num_electrodes = 20
+# truncate_electrodes = True
 #
-# fs = 160
-# int_start = 3500
-# int_end = 7500
+# fs = 256
+# int_start = 1000
+# int_end = 5000
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
+dataset = "eyes"
+num_electrodes = 64
+truncate_electrodes = False
+
+fs = 160
+int_start = 3500
+int_end = 7500
+
+input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
+output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
 
 def combine_tensors(tensor1, tensor2):
     num_of_subjects = tensor1.shape[0]

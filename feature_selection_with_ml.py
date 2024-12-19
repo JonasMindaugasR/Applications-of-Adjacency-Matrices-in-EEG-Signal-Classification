@@ -16,26 +16,26 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-# dataset = "depression"
-# num_electrodes = 20
-# truncate_electrodes = True
+dataset = "depression"
+num_electrodes = 20
+truncate_electrodes = True
+
+fs = 256
+int_start = 1000
+int_end = 5000
+
+# dataset = "eyes"
+# num_electrodes = 64
+# truncate_electrodes = False
 #
-# fs = 256
-# int_start = 1000
-# int_end = 5000
+# fs = 160
+# int_start = 3500
+# int_end = 7500
 
-dataset = "eyes"
-num_electrodes = 64
-truncate_electrodes = False
+matrices_combination = 'non' # 'non' 'bands' 'metrics'
 
-fs = 160
-int_start = 3500
-int_end = 7500
-
-matrices_combination = 'non'
-
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/graph_output_fir_iir"
-input_combined_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
+input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
+input_combined_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
 # input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_{int_start}_{int_end}"
 # output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{int_start}_{int_end}"
 
@@ -55,7 +55,7 @@ def get_unique_lasso_features(X_train_scaled, y_train):
 
 
 # Function to run ML models on each unique feature set
-def run_ml_models(X_train_scaled, X_test_scaled, y_train, y_test, feature_set=None):
+def run_ml_models(X_train_scaled, X_test_scaled, y_train, y_test, feature_set=None, n_component=None):
     results = []
 
     # Run each model on the unique feature set
@@ -70,6 +70,7 @@ def run_ml_models(X_train_scaled, X_test_scaled, y_train, y_test, feature_set=No
         results.append({
             'method': method,
             'selected features': feature_set,
+            'n comps': n_component,
             'Mean Accuracy': mean_accuracy,
             'Mean F1 Score': mean_f1_score,
             '95% CI for Accuracy Low': ci_accuracy[0],
@@ -100,7 +101,7 @@ def opt_lasso_ml_file(label_1_graph, label_0_graph):
     # Collect results for each unique feature set
     all_results = []
     for feature_set in unique_feature_sets:
-        results = run_ml_models(X_train_scaled, X_test_scaled, y_train, y_test, feature_set)
+        results = run_ml_models(X_train_scaled, X_test_scaled, y_train, y_test, feature_set=feature_set)
         all_results.extend(results)
 
     return all_results
@@ -132,7 +133,7 @@ def opt_pca_ml_file(label_1_graph, label_0_graph):
 
 
         # Run machine learning models on PCA-transformed data
-        results = run_ml_models(X_train_pca, X_test_pca, y_train, y_test, n_component)
+        results = run_ml_models(X_train_pca, X_test_pca, y_train, y_test, n_component=n_component)
 
         all_results.extend(results)
 
@@ -312,7 +313,7 @@ def opt_lasso_graph_kernels(label_1_graph, label_0_graph):
 
 
 def process_ml(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/ml_output_{method}_fir_iir/"
+    output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{method}/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")
@@ -344,7 +345,7 @@ def process_ml(filename_0, method = "lasso"):
     return "done"
 
 def process_ml_combined_metrics(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_metrics_4000_int/"
+    output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{method}_combined_metrics/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")
@@ -376,7 +377,7 @@ def process_ml_combined_metrics(filename_0, method = "lasso"):
     return "done"
 
 def process_ml_combined_bands(filename_0, method = "lasso"):
-    output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{method}_combined_bands_4000_int/"
+    output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{method}_combined_bands/"
     os.makedirs(f"{output_dir}", exist_ok=True)
 
     filename_1 = filename_0.replace("label_0", "label_1")

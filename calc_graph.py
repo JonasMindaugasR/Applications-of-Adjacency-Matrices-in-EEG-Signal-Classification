@@ -6,24 +6,24 @@ import os
 import re
 import multiprocessing as mp
 
-dataset = "depression"
-num_electrodes = 20
-truncate_electrodes = True
-
-fs = 256
-int_start = 1000
-int_end = 5000
-
-# dataset = "eyes"
-# num_electrodes = 64
-# truncate_electrodes = False
+# dataset = "depression"
+# num_electrodes = 20
+# truncate_electrodes = True
 #
-# fs = 160
-# int_start = 3500
-# int_end = 7500
+# fs = 256
+# int_start = 1000
+# int_end = 5000
 
-input_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/output"
-output_dir = f"H:/magistro_studijos/magis/data_{dataset}_filters/graph_output"
+dataset = "eyes"
+num_electrodes = 64
+truncate_electrodes = False
+
+fs = 160
+int_start = 3500
+int_end = 7500
+
+input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/output"
+output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
 
 def calc_graph(filename):
 

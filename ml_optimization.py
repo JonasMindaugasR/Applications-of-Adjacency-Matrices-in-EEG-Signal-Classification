@@ -12,12 +12,12 @@ import functions as f
 import tqdm
 import ast
 
-dataset = "eyes" # "depression", "eyes"
+dataset = "depression" # "depression", "eyes"
 
 
-graph_type = ""
+# graph_type = ""
 # graph_type = "combined_metrics"
-# graph_type = "combined_bands"
+graph_type = "combined_bands"
 
 # # Define the directories
 # input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_lasso_4000_int"
@@ -61,35 +61,35 @@ param_grids = {
 def get_metadata(dataset, graph_type, feat_select):
     if dataset == "eyes":
         if graph_type == "":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}"
 
         if graph_type == "combined_metrics":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}_combined_metrics"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}_combined_metrics"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}_combined_metrics"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}_combined_metrics"
 
         if graph_type == "combined_bands":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}_combined_bands"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}_combined_bands"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}_combined_bands"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}_combined_bands"
 
     if dataset == "depression":
         if graph_type == "":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}_4000_int"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_output_4000_int"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}_4000_int"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}"
 
         if graph_type == "combined_metrics":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}_combined_metrics_4000_int"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}_combined_metrics_4000_int"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}_combined_metrics"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}_combined_metrics"
 
         if graph_type == "combined_bands":
-            input_ml_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_output_{feat_select}_combined_bands_4000_int"
-            input_dir = f"H:/magistro_studijos/magis/data_{dataset}/graph_combined_output_4000_int"
-            output_dir = f"H:/magistro_studijos/magis/data_{dataset}/ml_optim_output_{feat_select}_combined_bands_4000_int"
+            input_ml_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_output_{feat_select}_combined_bands"
+            input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
+            output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/ml_optim_output_{feat_select}_combined_bands"
 
 
     return graph_type, input_ml_dir, input_dir, output_dir

@@ -1,15 +1,15 @@
 import functions as f
 import time
 
-dataset = "depression" # "eyes" "depression"
+dataset = "eyes" # "eyes" "depression"
 
 dataset_root = r"H:/magistro_studijos/magis/kodai/dyconnmap-master/dyconnmap-master/examples/data/raw_data/eeg-motor-movementimagery-dataset-1.0.0/files"
-store_dir_eyes = r"H:/magistro_studijos/magis/data_eyes/output"
+store_dir_eyes = r"H:/magistro_studijos/magis/final_results/data_eyes/output"
 
 
 folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/sveiki"
 folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
-store_dir_depr = r"H:/magistro_studijos/magis/data_depression/output"
+store_dir_depr = r"H:/magistro_studijos/magis/final_results/data_depression/output"
 
 # folder_path_healthy = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/sveiki"
 # folder_path_depr = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/depresija"
@@ -26,7 +26,7 @@ highcut = [40.0, 4.0, 8.0, 12.0, 30.0, 40.0]
 
 if __name__ == '__main__':
     start_time_multi = time.time()
-    for i in range(5):
+    for i in range(6):
         if dataset == "eyes":
             f.import_using_multi_threading(dataset_root=dataset_root,
                                            store_dir=store_dir_eyes,
