@@ -11,9 +11,6 @@ folder_path_healthy = r"H:/magistro_studijos/magis/data_depression/raw/edf neval
 folder_path_depr = r"H:/magistro_studijos/magis/data_depression/raw/edf nevalyti atskirti/depresija"
 store_dir_depr = r"H:/magistro_studijos/magis/final_results/data_depression/output"
 
-# folder_path_healthy = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/sveiki"
-# folder_path_depr = r"H:/magistro_studijos/magis/data_depression_filt/raw/edf svarus atskirti/depresija"
-# store_dir_depr = r"H:/magistro_studijos/magis/data_depression_filt/output"
 
 fs_eyes = 160
 fs_depression = 256

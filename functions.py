@@ -1,40 +1,20 @@
-import scipy.io
 import pandas as pd
-import plotly.graph_objects as go
 import os
-import random
-import networkx as nx
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-
-import scipy.stats as stats
-from scipy.stats import mannwhitneyu
-from statsmodels.stats.multitest import multipletests
-
-
-import torch
-from torch.nn import Linear
-import torch.nn.functional as F
-import numpy as np
-import pickle
 
 from scipy import signal
 from scipy.signal import butter, filtfilt
 
 import numpy as np
 from xgboost import XGBClassifier
-from sklearn import datasets
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.utils import resample
 from sklearn.linear_model import Lasso
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LassoCV
 from sklearn.metrics import mutual_info_score
-
 
 import mne
 import tqdm
@@ -247,20 +227,6 @@ def _normalize_trial(trial):
   trial_std = np.std(trial)
 
   trial = (trial - trial_avg)/trial_std
-  return trial
-
-# def min_max(trial):
-#   trial_min  = np.min(trial)
-#   trial_max  = np.max(trial)
-
-#   trial = (trial - trial_min)/(trial_max - trial_min)
-#   return trial
-
-def binarize(trial, threshold = 0):
-  if trial > threshold:
-    trial = 1
-  else:
-    trial = 0
   return trial
 
 def _normalize_trial_eeg(eeg_trial, eeg_mean, eeg_std):
@@ -493,26 +459,6 @@ def bandpass_filter(data, lowcut, highcut, fs, order):
     y = filtfilt(b, a, data, axis=0)  # Filtering along the time axis
     return y
 
-# apply filter to dataset
-def filter_dataset(list_mat1, list_mat2, lowcut, highcut, fs, order=4):
-  opened = []
-  closed = []
-
-  for i in list_mat1:
-    # Filter the signal to keep frequencies between 1 and 50 Hz
-    filtered_signal = bandpass_filter(i, lowcut, highcut, fs, order)
-
-    opened.append(filtered_signal)
-
-
-  for i in list_mat2:
-    # Filter the signal to keep frequencies between 1 and 50 Hz
-    filtered_signal = bandpass_filter(i, lowcut, highcut, fs, order)
-
-    closed.append(filtered_signal)
-
-  return opened, closed
-
 #--------------------Utility 2--------------------
 
 # apply adjacency metric
@@ -571,38 +517,19 @@ def prep_ml_dataset(features_mat_1, features_mat_2, metric=False):
     X = features_mat_1 + features_mat_2
     y = [1] * 100 + [0] * 100  # Labels
 
-  # Split the data
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+  # Split the data into train and holdout set
+  X_train_test, X_test_holdout, y_train_test, y_test_holdout = train_test_split(X, y, test_size=0.2, random_state=42)
+
+  # split train_test set in to train and test set
+  X_train, X_test, y_train, y_test = train_test_split(X_train_test, y_train_test, test_size=0.2, random_state=42)
 
   # Standardize the data
   scaler = StandardScaler()
   X_train_scaled = scaler.fit_transform(X_train)
   X_test_scaled = scaler.transform(X_test)
+  X_test_holdout_scaled = scaler.transform(X_test_holdout)
 
-  return X_train_scaled, X_test_scaled, y_train, y_test
-
-def prep_ml_dataset_all(features_mat_1, features_mat_2, metric=False):
-  if metric == False:
-    opened_corr_flat = list()
-    closed_corr_flat = list()
-
-    for i in range(len(features_mat_1)):
-      opened_corr_flat.append(features_mat_1[i].flatten())
-      closed_corr_flat.append(features_mat_2[i].flatten())
-
-    X = opened_corr_flat + closed_corr_flat
-    y = [1] * 100 + [0] * 100  # Labels
-
-  if metric == True:
-    X = features_mat_1 + features_mat_2
-    y = [1] * 100 + [0] * 100  # Labels
-
-  # Standardize the data
-  scaler = StandardScaler()
-  X_scaled = scaler.fit_transform(X)
-
-
-  return X_scaled, y
+  return X_train_scaled, X_test_scaled, y_train, y_test, X_test_holdout_scaled, y_test_holdout
 
 def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
   selected_features = []
@@ -618,6 +545,91 @@ def lasso_optimization(X_train_scaled, y_train, alpha=0.1):
       alpha *= 0.5  # Decrease alpha (you can adjust the reduction factor)
 
   return selected_features
+
+def svm_lasso(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
+
+  # Train a classifier (SVM) using only the selected features
+  svm = SVC(kernel="rbf", C=1.0)
+  svm.fit(X_train_selected, y_train)
+
+  # Make predictions and evaluate the classifier
+  y_pred = svm.predict(X_test_selected)
+
+  method = "svm"
+  mean_accuracy = accuracy_score(y_test, y_pred) * 100
+  mean_f1_score = f1_score(y_test, y_pred) * 100
+
+  return method, mean_accuracy, mean_f1_score
+
+
+def rf_lasso(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_estimators=100, max_depth=None):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
+
+  accuracies = []
+  f1_scores = []
+
+  # Create a Random Forest model
+  rf_model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=42)
+
+  # Train the Random Forest model on the resampled training data
+  rf_model.fit(X_train_selected, y_train)
+
+  # Predict labels for the test data
+  y_pred = rf_model.predict(X_test_selected)
+
+  method = "rf"
+  mean_accuracy = accuracy_score(y_test, y_pred) * 100
+  mean_f1_score = f1_score(y_test, y_pred) * 100
+
+  return method, mean_accuracy, mean_f1_score
+
+
+def xgb_lasso(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_estimators=200, max_depth=3, learning_rate=0.3):
+  if selected_features == None:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled
+    X_test_selected = X_test_scaled
+  else:
+    # Create a reduced feature matrix with only the selected features
+    X_train_selected = X_train_scaled[:, selected_features]
+    X_test_selected = X_test_scaled[:, selected_features]
+
+  accuracies = []
+  f1_scores = []
+
+  # Create an XGBoost model
+  xgb_model = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, eval_metric='logloss')
+
+  # Train the XGBoost model on the resampled training data
+  xgb_model.fit(X_train_selected, y_train)
+
+  # Predict labels for the test data
+  y_pred = xgb_model.predict(X_test_selected)
+
+  # Evaluate the model
+  accuracy_score(y_test, y_pred)
+  f1_score(y_test, y_pred)
+
+  method = "xgb"
+  mean_accuracy = accuracy_score(y_test, y_pred) * 100
+  mean_f1_score = f1_score(y_test, y_pred) * 100
+
+  return method, mean_accuracy, mean_f1_score
 
 def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100):
   if selected_features == None:
@@ -651,10 +663,10 @@ def svm_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_
   method = "svm"
   mean_accuracy = np.mean(accuracies) * 100
   mean_f1_score = np.mean(f1_scores) * 100
-  ci_accuracy = [np.percentile(accuracies, 2.5) * 100, np.percentile(accuracies, 97.5) * 100]
-  ci_f1_score = [np.percentile(f1_scores, 2.5) * 100, np.percentile(f1_scores, 97.5) * 100]
+  std_accuracy = np.std(accuracies) * 100
 
-  return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
+
+  return method, mean_accuracy, mean_f1_score, std_accuracy
 
 
 def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100, n_estimators=100, max_depth=None):
@@ -691,10 +703,9 @@ def rf_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_f
   method = "rf"
   mean_accuracy = np.mean(accuracies) * 100
   mean_f1_score = np.mean(f1_scores) * 100
-  ci_accuracy = [np.percentile(accuracies, 2.5) * 100, np.percentile(accuracies, 97.5) * 100]
-  ci_f1_score = [np.percentile(f1_scores, 2.5) * 100, np.percentile(f1_scores, 97.5) * 100]
+  std_accuracy = np.std(accuracies) * 100
 
-  return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
+  return method, mean_accuracy, mean_f1_score, std_accuracy
 
 
 def xgb_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_features=None, n_bootstrap=100, n_estimators=200, max_depth=3, learning_rate=0.3):
@@ -731,7 +742,6 @@ def xgb_lasso_bootsrap(X_train_scaled, X_test_scaled, y_train, y_test, selected_
   method = "xgb"
   mean_accuracy = np.mean(accuracies) * 100
   mean_f1_score = np.mean(f1_scores) * 100
-  ci_accuracy = [np.percentile(accuracies, 2.5) * 100, np.percentile(accuracies, 97.5) * 100]
-  ci_f1_score = [np.percentile(f1_scores, 2.5) * 100, np.percentile(f1_scores, 97.5) * 100]
+  std_accuracy = np.std(accuracies) * 100
 
-  return method, mean_accuracy, mean_f1_score, ci_accuracy, ci_f1_score
+  return method, mean_accuracy, mean_f1_score, std_accuracy

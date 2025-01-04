@@ -1,5 +1,3 @@
-import functions as f
-import pandas as pd
 import tqdm
 import os
 import re
@@ -22,8 +20,8 @@ fs = 160
 int_start = 3500
 int_end = 7500
 
-input_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_output"
-output_dir = f"H:/magistro_studijos/magis/final_results/data_{dataset}/graph_combined_output"
+input_dir = f"H:/magistro_studijos/magis/final_results_3/data_{dataset}/graph_output"
+output_dir = f"H:/magistro_studijos/magis/final_results_3/data_{dataset}/graph_combined_output"
 
 def combine_tensors(tensor1, tensor2):
     num_of_subjects = tensor1.shape[0]
@@ -115,10 +113,41 @@ def combine_metrics(filename_0):
 
     return
 
-def combine_metrics_fully(filename_0):
-    return
+def combine_metrics_bands(filename_0):
+    filename_1 = filename_0.replace("label_0", "label_1")
 
-# TODO: add function to combine channels from all frequencies into one array and then calculate matrices
+    pattern = r"metrics_(\d+\.\d+-\d+\.\d+)_label_\d+_(weight|bin)_combined\.npy"
+
+    match = re.search(pattern, filename_0)
+    if match:
+        _, label = match.groups()
+
+    band_1_label_1 = np.load(f"{output_dir}/metrics_0.5-4.0_label_1_{label}_combined.npy")
+    band_2_label_1 = np.load(f"{output_dir}/metrics_4.0-8.0_label_1_{label}_combined.npy")
+    band_3_label_1 = np.load(f"{output_dir}/metrics_8.0-12.0_label_1_{label}_combined.npy")
+    band_4_label_1 = np.load(f"{output_dir}/metrics_12.0-30.0_label_1_{label}_combined.npy")
+    band_5_label_1 = np.load(f"{output_dir}//metrics_30.0-40.0_label_1_{label}_combined.npy")
+
+    combined_tensors_label_1 = combine_tensors(band_1_label_1, band_2_label_1)
+    combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_3_label_1)
+    combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_4_label_1)
+    combined_tensors_label_1 = combine_tensors(combined_tensors_label_1, band_5_label_1)
+
+    band_1_label_0 = np.load(f"{output_dir}/metrics_0.5-4.0_label_0_{label}_combined.npy")
+    band_2_label_0 = np.load(f"{output_dir}/metrics_4.0-8.0_label_0_{label}_combined.npy")
+    band_3_label_0 = np.load(f"{output_dir}/metrics_8.0-12.0_label_0_{label}_combined.npy")
+    band_4_label_0 = np.load(f"{output_dir}/metrics_12.0-30.0_label_0_{label}_combined.npy")
+    band_5_label_0 = np.load(f"{output_dir}//metrics_30.0-40.0_label_0_{label}_combined.npy")
+
+    combined_tensors_label_0 = combine_tensors(band_1_label_0, band_2_label_0)
+    combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_3_label_0)
+    combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_4_label_0)
+    combined_tensors_label_0 = combine_tensors(combined_tensors_label_0, band_5_label_0)
+
+    np.save(f"{output_dir}/metrics_freq_label_1_{label}_combined_all", combined_tensors_label_1)
+    np.save(f"{output_dir}/metrics_freq_label_0_{label}_combined_all", combined_tensors_label_0)
+
+    return
 
 if __name__ == '__main__':
     os.makedirs(f"{output_dir}", exist_ok=True)
@@ -136,3 +165,11 @@ if __name__ == '__main__':
     with mp.Pool(mp.cpu_count() - 3) as pool:
         # Collect all results in a list of lists
         list(tqdm.tqdm(pool.imap(combine_metrics, filenames), total=len(filenames)))
+
+    # Get list of filenames
+    filenames = [f for f in os.listdir(output_dir) if 'label_0' in f and '0.5-4.0' in f]
+
+    # Use multiprocessing Pool to parallelize file processing
+    with mp.Pool(mp.cpu_count() - 3) as pool:
+        # Collect all results in a list of lists
+        list(tqdm.tqdm(pool.imap(combine_metrics_bands, filenames), total=len(filenames)))
